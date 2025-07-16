@@ -51,7 +51,7 @@ export function useUser() {
               email: state.user.email || '',
               displayName: state.user.displayName || username,
               username: username,
-              bio: '',
+              bio: 'Welcome to Twitter Clone! Database is being set up...',
               avatarUrl: state.user.photoURL || '',
               verified: false,
               followersCount: 0,
