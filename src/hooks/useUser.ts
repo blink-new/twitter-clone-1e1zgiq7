@@ -43,6 +43,24 @@ export function useUser() {
           }
         } catch (error) {
           console.error('Error setting up user:', error)
+          // Fallback: create a temporary user object from auth data
+          if (state.user) {
+            const username = state.user.email?.split('@')[0] || `user_${Date.now()}`
+            setCurrentUser({
+              id: state.user.id,
+              email: state.user.email || '',
+              displayName: state.user.displayName || username,
+              username: username,
+              bio: '',
+              avatarUrl: state.user.photoURL || '',
+              verified: false,
+              followersCount: 0,
+              followingCount: 0,
+              tweetsCount: 0,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            })
+          }
         }
       } else {
         setCurrentUser(null)

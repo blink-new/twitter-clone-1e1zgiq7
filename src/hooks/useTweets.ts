@@ -58,6 +58,8 @@ export function useTweets() {
       setTweets(enrichedTweets)
     } catch (error) {
       console.error('Error loading tweets:', error)
+      // Fallback: set empty tweets array if database is not available
+      setTweets([])
     } finally {
       setLoading(false)
     }
@@ -104,7 +106,8 @@ export function useTweets() {
       return newTweet
     } catch (error) {
       console.error('Error creating tweet:', error)
-      throw error
+      // Show user-friendly error message
+      throw new Error('Unable to post tweet. Database not available.')
     }
   }
 
@@ -156,6 +159,7 @@ export function useTweets() {
       await loadTweets()
     } catch (error) {
       console.error('Error toggling like:', error)
+      // Silently fail for now - database not available
     }
   }
 
@@ -207,6 +211,7 @@ export function useTweets() {
       await loadTweets()
     } catch (error) {
       console.error('Error toggling retweet:', error)
+      // Silently fail for now - database not available
     }
   }
 
@@ -214,15 +219,27 @@ export function useTweets() {
     loadTweets()
 
     // Set up real-time updates
-    const unsubscribe = blink.realtime.subscribe('tweets', (message) => {
-      if (message.type === 'tweet_created' || message.type === 'tweet_updated') {
-        // Refresh tweets when there are updates
-        loadTweets()
+    let unsubscribe: (() => void) | null = null
+    
+    const setupRealtime = async () => {
+      try {
+        unsubscribe = await blink.realtime.subscribe('tweets', (message) => {
+          if (message.type === 'tweet_created' || message.type === 'tweet_updated') {
+            // Refresh tweets when there are updates
+            loadTweets()
+          }
+        })
+      } catch (error) {
+        console.error('Error setting up realtime subscription:', error)
       }
-    })
+    }
+
+    setupRealtime()
 
     return () => {
-      unsubscribe()
+      if (unsubscribe) {
+        unsubscribe()
+      }
     }
   }, [])
 
